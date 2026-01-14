@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pacific | Cinematic Growth Systems</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        pacific: {
+                            black: '#050505',
+                            dark: '#0a0a0a',
+                            gray: '#1a1a1a',
+                            gold: '#d4af37', 
+                            goldDim: '#8a7020',
+                            white: '#e5e5e5',
+                            muted: '#888888'
+                        }
+                    },
+                    letterSpacing: {
+                        widest: '.25em',
+                    },
+                    animation: {
+                        'spin-slow': 'spin 20s linear infinite',
+                        'spin-reverse': 'spin 25s linear infinite reverse',
+                        'spin-medium': 'spin 12s linear infinite',
+                        'spin-fast': 'spin 6s linear infinite',
+                        'spin-ultra-slow': 'spin 40s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- GSAP & Lenis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+
+    <style>
+        /* Custom Utilities */
+        body {
+            background-color: #000;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+
+        /* Video Background Styling */
+        #bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+        }
+
+        /* Dark Overlay to ensure text readability over video */
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(5,5,5,0.3) 0%, rgba(5,5,5,0.95) 100%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Film Grain */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Custom Scrollbar Hide */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Cursor */
+        .custom-cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+            mix-blend-mode: difference;
+        }
+        .custom-cursor.hovered {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(212, 175, 55, 0.2);
+            border-color: transparent;
+        }
+
+        /* Typography Utilities */
+        .text-outline { -webkit-text-stroke: 1px rgba(255,255,255,0.3); color: transparent; }
+
+        /* HALO TEXT UTILITY FOR SCENE 3 */
+        .halo-text {
+            color: #ffffff;
+            filter: blur(20px); 
+            opacity: 0.8;
+            mix-blend-mode: screen;
+            white-space: nowrap;
+            user-select: none;
+            will-change: transform;
+            font-weight: 900; 
+            letter-spacing: -0.05em;
+        }
+        
+        /* Glass Panel Utility */
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Specific style for Scene 2 text background */
+        .text-glass {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* SCENE 2: COMET STYLES (RED & WHITE) */
+        .comet-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: center center;
+            pointer-events: none;
+            will-change: transform, opacity;
+            z-index: 0;
+            mix-blend-mode: screen; 
+        }
+        .comet-body {
+            position: relative;
+            transform-origin: left center;
+            display: flex;
+            align-items: center;
+        }
+        .comet-head {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fff;
+            flex-shrink: 0;
+            z-index: 2;
+        }
+        .comet-tail {
+            height: 2.5px;
+            border-radius: 2px;
+            opacity: 1;
+            transform: translateX(-2px);
+            z-index: 1;
+        }
+
+        /* SCENE 4: ORBITAL SYSTEM STYLES */
+        .orbit-system {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .orbit-track {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .planet-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .planet {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translate(50%, -50%);
+            border-radius: 50%;
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        /* SCENE 6: INTERACTIVE CARD STYLES */
+        .pricing-grid {
+            perspective: 1000px;
+        }
+        .interactive-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+        .interactive-card:hover {
+            transform: translateY(-10px) rotateX(2deg);
+            border-color: rgba(212, 175, 55, 0.6);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.1);
+        }
+        .interactive-card .icon-container {
+            transition: transform 0.4s ease;
+        }
+        .interactive-card:hover .icon-container {
+            transform: scale(1.2);
+            color: #d4af37;
+        }
+        .interactive-card:hover .card-title {
+            color: #fff;
+        }
+        .interactive-card.selected {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: #d4af37;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2) inset;
+        }
+        .interactive-card.selected .icon-container {
+            color: #d4af37;
+            transform: scale(1.2);
+        }
+        .interactive-card.selected .check-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .check-icon {
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s ease;
+        }
+
+        /* SCENE 7: DEMO VIDEO STYLES */
+        .demo-video-wrapper {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .demo-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.7s ease;
+        }
+        .card-hover:hover .demo-video {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. THE VIDEO BACKGROUND (Fixed) -->
+    <div class="video-overlay"></div>
+    <div class="noise-overlay"></div>
+    <div id="cursor" class="custom-cursor hidden md:block"></div>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useLayoutEffect, useMemo } = React;
+
+        // --- COMPONENTS ---
+
+        // 0. NAVBAR COMPONENT
+        const Navbar = () => {
+            return (
+                <nav className="fixed top-0 left-0 w-full z-50 px-6 py-5 glass-panel border-b border-white/5">
+                    <div className="flex items-center gap-4">
+                        {/* Creative Logo Image (SVG) */}
+                        <div className="w-10 h-10 relative group cursor-pointer">
+                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-pacific-gold">
+                                <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z" stroke="currentColor" strokeWidth="4" fill="rgba(212, 175, 55, 0.1)" className="transition-all duration-500 group-hover:fill-pacific-gold/20 group-hover:scale-110"/>
+                                <path d="M50 20 L80 35 L80 65 L50 80" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
+                            </svg>
+                        </div>
+                        
+                        {/* Logo Text */}
+                        <div className="flex flex-col">
+                            <span className="font-serif text-2xl text-pacific-white tracking-wider leading-none">Pacific</span>
+                            <span className="text-[10px] uppercase tracking-[0.3em] text-pacific-muted">Digital Systems</span>
+                        </div>
+                    </div>
+                </nav>
+            );
+        };
+
+        // 1. Custom Cursor Hook
+        const useCustomCursor = () => {
+            const cursorRef = useRef(null);
+            useEffect(() => {
+                const cursor = cursorRef.current;
+                const moveCursor = (e) => {
+                    gsap.to(cursor, {
+                        x: e.clientX,
+                        y: e.clientY,
+                        duration: 0.1,
+                        ease: "power2.out"
+                    });
+                };
+                const addHoverState = () => cursor.classList.add('hovered');
+                const removeHoverState = () => cursor.classList.remove('hovered');
+
+                window.addEventListener('mousemove', moveCursor);
+                
+                const interactables = document.querySelectorAll('a, button, input, .card-hover, .interactive-card, .demo-card, .social-icon');
+                interactables.forEach(el => {
+                    el.addEventListener('mouseenter', addHoverState);
+                    el.addEventListener('mouseleave', removeHoverState);
+                });
+
+                return () => {
+                    window.removeEventListener('mousemove', moveCursor);
+                };
+            }, []);
+            return cursorRef;
+        };
+
+        // 2. Scene 1: Opening
+        const Scene1 = () => {
+            const containerRef = useRef(null);
+            const textContentRef = useRef(null);
+            const imageRef = useRef(null);
+
+            useLayoutEffect(() => {
+                const ctx = gsap.context(() => {
+                    const tl = gsap.timeline();
+                    tl.from(textContentRef.current, { x: -50, opacity: 0, duration: 1.5, ease: "power3.out" })
+                    .from(imageRef.current, { x: 50, opacity: 0, duration: 1.5, ease: "power3.out" }, "-=1.2");
+                }, containerRef);
+                return () => ctx.revert();
+            }, []);
+
+            return (
+                <section ref={containerRef} className="relative h-screen w-full overflow-hidden flex flex-col md:flex-row items-center justify-between px-6 md:px-12 lg:px-24 py-12 pt-24">
+                    <div ref={textContentRef} className="w-full md:w-1/2 flex flex-col justify-center z-10 pl-2 md:pl-8">
+                        <div className="mb-6">
+                            <span className="text-pacific-gold text-[10px] md:text-xs tracking-[0.4em] uppercase block mb-4 font-sans">Pacific Digital</span>
+                            <h1 className="font-serif text-6xl md:text-7xl lg:text-9xl text-pacific-white leading-none tracking-tighter">PACIFIC</h1>
+                        </div>
+                        <div className="max-w-lg">
+                            <p className="font-serif text-3xl md:text-5xl text-pacific-muted italic mt-4 leading-tight">We turn traffic into currency.</p>
+                            <p className="text-pacific-white/60 mt-6 leading-relaxed text-sm md:text-base font-light border-l-2 border-pacific-gold pl-4">Experience digital architecture designed not just to be seen, but to generate wealth.</p>
+                        </div>
+                    </div>
+                    <div ref={imageRef} className="w-full md:w-1/2 flex justify-center md:justify-end items-center z-10 pr-2 md:pr-8 mt-12 md:mt-0">
+                        <div className="relative aspect-square w-[280px] md:w-[350px] lg:w-[450px] overflow-hidden bg-pacific-gray/50">
+                            <img src="./earth-2768_256.gif" alt="Cinematic Architecture" className="w-full h-full object-cover" />
+                        </div>
+                    </div>
+                    <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 opacity-40 z-20">
+                        <span className="text-[10px] tracking-widest uppercase">Scroll</span>
+                        <div className="w-[1px] h-12 bg-pacific-gold"></div>
+                    </div>
+                </section>
+            );
+        };
+
+        // 3. Scene 2: Reality Check (RED & WHITE COMETS)
+        const Scene2 = () => {
+            const containerRef = useRef(null);
+            const cometsContainerRef = useRef(null);
+            const linesRef = useRef([]);
+
+            // Generate Red and White comets
+            const comets = useMemo(() => Array.from({ length: 350 }).map((_, i) => {
+                const angle = Math.random() * 360; 
+                const distance = Math.random() * 1500 + 1000; 
+                const isRed = Math.random() > 0.8; // 20% chance for Red
+                const tailLength = Math.random() * 150 + 80; 
+                const thickness = Math.random() * 2 + 1;
+                const rad = angle * (Math.PI / 180);
+                const destX = Math.cos(rad) * distance;
+                const destY = Math.sin(rad) * distance;
+                return { id: i, destX, destY, angle, tailLength, thickness, isRed };
+            }), []);
+
+            const lines = [
+                "You already have a website.",
+                "Traffic comes.",
+                "Design is solid.",
+                "But customers don’t."
+            ];
+
+            useEffect(() => {
+                const ctx = gsap.context(() => {
+                    const cometWrappers = Array.from(cometsContainerRef.current.children);
+                    const stepDuration = 0.15; 
+                    const pauseDuration = 0.05;
+                    const burstDuration = 0.4; 
+                    const totalScrollDistance = (lines.length * (stepDuration + pauseDuration + stepDuration + burstDuration)) * 400; 
+
+                    const tl = gsap.timeline({
+                        scrollTrigger: {
+                            trigger: containerRef.current,
+                            start: "top top",
+                            end: `+=${totalScrollDistance}`, 
+                            scrub: 1,
+                            pin: true, 
+                            anticipatePin: 1
+                        }
+                    });
+
+                    if(cometWrappers.length > 0) {
+                        gsap.set(cometWrappers, { xPercent: -50, yPercent: -50, opacity: 0, scale: 0.5 });
+                        linesRef.current.forEach((line, i) => {
+                            const isLast = i === linesRef.current.length - 1;
+                            tl.to(line, { opacity: 1, scale: 1, filter: "blur(0px)", duration: stepDuration, ease: "power2.out" }, i * 1);
+                            tl.to(line, { opacity: 0, scale: 1.05, filter: "blur(10px)", duration: stepDuration, ease: "power2.in" }, `>+=${pauseDuration}`);
+                            tl.to(cometWrappers, {
+                                opacity: (i, target) => target.querySelector('.comet-head').dataset.isRed === 'true' ? 1 : 0.8,
+                                scale: 1,
+                                x: (i, target) => parseFloat(target.dataset.destX),
+                                y: (i, target) => parseFloat(target.dataset.destY),
+                                duration: burstDuration,
+                                ease: "expo.in",
+                                stagger: { amount: 0.3, from: "random" } 
+                            }, "<");
+                            if (!isLast) {
+                                tl.to(cometWrappers, { opacity: 0, duration: 0.1 });
+                                tl.set(cometWrappers, { x: 0, y: 0, opacity: 0, scale: 0.5 });
+                            } else {
+                                tl.to(cometWrappers, { opacity: 0, duration: 0.5, delay: 0.1 }, ">+0.1");
+                            }
+                        });
+                    }
+                }, containerRef);
+                return () => ctx.revert();
+            }, [comets, lines]);
+
+            return (
+                <section id="scene-2" ref={containerRef} className="h-screen w-full flex items-center justify-center relative overflow-hidden bg-black">
+                     <div ref={cometsContainerRef} className="absolute inset-0 z-0 overflow-hidden flex items-center justify-center">
+                        {comets.map((comet) => (
+                            <div key={comet.id} data-dest-x={comet.destX} data-dest-y={comet.destY} className="comet-wrapper">
+                                <div className="comet-body" style={{ transform: `rotate(${comet.angle + 90}deg)` }}>
+                                    <div className="comet-tail" style={{
+                                        width: `${comet.tailLength}px`,
+                                        // RED & WHITE GRADIENT
+                                        background: comet.isRed 
+                                            ? 'linear-gradient(90deg, transparent, rgba(255, 50, 50, 1))' 
+                                            : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 1))',
+                                    }} />
+                                    <div 
+                                        data-is-red={comet.isRed}
+                                        className="comet-head"
+                                        style={{
+                                            backgroundColor: comet.isRed ? '#ff3333' : '#fff',
+                                            // RED & WHITE GLOW
+                                            boxShadow: comet.isRed 
+                                                ? `0 0 20px 10px rgba(255, 50, 50, 1), 0 0 40px 20px rgba(255, 50, 50, 0.6)` 
+                                                : `0 0 15px 8px rgba(255, 255, 255, 1), 0 0 30px 15px rgba(255, 255, 255, 0.5)`
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                     </div>
+                     <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none"></div>
+                     <div className="relative z-20 text-center w-full h-full flex items-center justify-center px-4">
+                        {lines.map((text, i) => (
+                            <div key={i} ref={el => linesRef.current[i] = el} className="absolute w-full max-w-3xl opacity-0 scale-90">
+                                <div className="text-glass py-8 px-6 rounded-xl inline-block">
+                                    <h2 className="font-serif text-4xl md:text-6xl lg:text-7xl text-white whitespace-pre-line leading-tight drop-shadow-lg">{text}</h2>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            );
+        };
+
+        // 4. Scene 3: The Truth
+        const Scene3 = () => {
+            const containerRef = useRef(null);
+            const row1Ref = useRef(null);
+            const row2Ref = useRef(null);
+
+            const keywords = ["CONVERSION", "LEADS", "SALES", "REVENUE", "GROWTH", "SCALE", "TRAFFIC", "PROFIT", "METRICS", "ROI", "ACQUISITION", "CHURN", "FUNNEL", "CUSTOMERS", "SUCCESS", "DOMINANCE", "VELOCITY", "CAPTURE", "SYSTEMS", "FLOW"];
+
+            const generateRandomizedText = (count, direction) => {
+                return Array.from({ length: count }).map((_, i) => {
+                    const word = keywords[Math.floor(Math.random() * keywords.length)];
+                    const margin = Math.floor(Math.random() * 50) + 30; 
+                    const size = Math.floor(Math.random() * 100) + 150; 
+                    const yOffset = (Math.random() * 30) - 15;
+                    return (
+                        <span key={`${direction}-${i}`} style={{ marginRight: `${margin}px`, fontSize: `${size}px`, transform: `translateY(${yOffset}px)` }} className="font-sans font-black tracking-tighter halo-text">{word}</span>
+                    );
+                });
+            };
+
+            useLayoutEffect(() => {
+                const ctx = gsap.context(() => {
+                    gsap.from(".truth-text", { opacity: 0, y: 100, duration: 1.5, scrollTrigger: { trigger: containerRef.current, start: "top 80%", end: "top 30%", scrub: 1 } });
+                    if (row1Ref.current && row2Ref.current) {
+                        const speedRow1 = 40; const speedRow2 = 60;
+                        gsap.to(row1Ref.current, { xPercent: -50, duration: speedRow1, ease: "none", repeat: -1, force3D: true });
+                        gsap.fromTo(row2Ref.current, { xPercent: -50 }, { xPercent: 0, duration: speedRow2, ease: "none", repeat: -1, force3D: true });
+                    }
+                }, containerRef);
+                return () => ctx.revert();
+            }, []);
+
+            const contentRow1 = generateRandomizedText(80, 'row1'); 
+            const contentRow2 = generateRandomizedText(80, 'row2'); 
+
+            return (
+                <section ref={containerRef} className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-black">
+                    <div className="absolute inset-0 z-0 w-full h-full overflow-hidden pointer-events-none">
+                        <div className="absolute top-0 left-0 w-full overflow-hidden">
+                            <div ref={row1Ref} className="flex whitespace-nowrap will-change-transform">{[...contentRow1, ...contentRow1, ...contentRow1]}</div>
+                        </div>
+                        <div className="absolute bottom-0 left-0 w-full overflow-hidden">
+                             <div ref={row2Ref} className="flex whitespace-nowrap will-change-transform">{[...contentRow2, ...contentRow2, ...contentRow2]}</div>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black z-10 pointer-events-none opacity-50"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black z-10 pointer-events-none opacity-50"></div>
+                    </div>
+                    <div className="max-w-5xl px-6 text-center z-20 relative">
+                        <p className="text-pacific-gold uppercase tracking-widest mb-6 text-sm drop-shadow-md">The Reframe</p>
+                        <h2 className="truth-text font-serif text-5xl md:text-7xl lg:text-8xl leading-tight mb-8 text-white drop-shadow-2xl">
+                            Design is not problem.<br/><span className="text-outline italic">Conversion</span> is.
+                        </h2>
+                        <p className="truth-text text-pacific-white max-w-2xl mx-auto text-lg md:text-xl font-light leading-relaxed drop-shadow-md bg-black/40 p-4 rounded-lg backdrop-blur-sm">
+                            A beautiful website that doesn't convert is just expensive art. We don't make art. We make revenue engines.
+                        </p>
+                    </div>
+                </section>
+            );
+        };
+
+        // 5. Scene 4: Enter Pacific (DENSE SOLAR SYSTEM)
+        const Scene4 = () => {
+            return (
+                <section className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-black/30 z-0"></div>
+                    
+                    <div className="orbit-system">
+                        <div className="orbit-track w-[250px] h-[250px] border-pacific-gold/20">
+                            <div className="planet-container animate-spin-fast">
+                                <div className="planet w-2 h-2 bg-pacific-gold text-pacific-gold" style={{ boxShadow: "0 0 15px 4px rgba(212, 175, 55, 0.8)" }}></div>
+                            </div>
+                        </div>
+                        <div className="orbit-track w-[400px] h-[400px] border-white/10">
+                            <div className="planet-container animate-spin-reverse">
+                                <div className="planet w-4 h-4 bg-white text-white" style={{ boxShadow: "0 0 20px 5px rgba(255, 255, 255, 0.4)" }}></div>
+                            </div>
+                        </div>
+                        <div className="orbit-track w-[600px] h-[600px] border-white/5">
+                            <div className="planet-container animate-spin-slow">
+                                <div className="planet w-6 h-6 bg-gray-400 text-gray-400" style={{ boxShadow: "0 0 25px 8px rgba(150, 150, 150, 0.3)" }}></div>
+                            </div>
+                        </div>
+                        <div className="orbit-track w-[800px] h-[800px] border-cyan-900/20">
+                            <div className="planet-container animate-spin-medium">
+                                <div className="planet w-3 h-3 bg-cyan-300 text-cyan-300" style={{ boxShadow: "0 0 20px 6px rgba(103, 232, 249, 0.4)" }}></div>
+                            </div>
+                        </div>
+                        <div className="orbit-track w-[1100px] h-[1100px] border-red-900/20">
+                            <div className="planet-container animate-spin-ultra-slow">
+                                <div className="planet w-4 h-4 bg-red-500 text-red-500" style={{ boxShadow: "0 0 25px 8px rgba(239, 68, 68, 0.3)" }}></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="z-10 text-center px-4 max-w-4xl glass-panel p-12 rounded-2xl backdrop-blur-md relative">
+                        <div className="absolute inset-0 bg-pacific-gold/5 blur-3xl rounded-2xl -z-10"></div>
+                        <h2 className="font-serif text-4xl md:text-6xl text-pacific-white mb-6 relative z-10">
+                            Pacific doesn’t build websites.
+                        </h2>
+                        <div className="h-px w-24 bg-pacific-gold mx-auto mb-6 relative z-10"></div>
+                        <h3 className="text-2xl md:text-4xl font-light text-pacific-gold relative z-10">
+                            We build customer-acquisition systems.
+                        </h3>
+                    </div>
+                </section>
+            );
+        };
+
+        // 6. Scene 5: The System
+        const Scene5 = () => {
+            const cards = [
+                { title: "Lead Capture", desc: "Magnetic, not annoying." },
+                { title: "Pre-qualification", desc: "Filter noise. Signal only." },
+                { title: "Automation", desc: "While you sleep." },
+                { title: "Sales Handoff", desc: "Warm leads. Hot calls." }
+            ];
+
+            return (
+                <section className="py-32 relative">
+                    <div className="container mx-auto px-6 relative z-10">
+                        <div className="mb-20">
+                            <h3 className="font-serif text-3xl md:text-5xl text-pacific-white drop-shadow-md">The System.</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                            {cards.map((card, i) => (
+                                <div key={i} className="group p-8 border border-white/10 hover:border-pacific-gold/50 transition-colors duration-500 glass-panel rounded-lg hover:-translate-y-2">
+                                    <div className="text-pacific-gold/20 font-mono text-4xl mb-4 group-hover:text-pacific-gold transition-colors">0{i+1}</div>
+                                    <h4 className="text-xl text-pacific-white mb-2">{card.title}</h4>
+                                    <p className="text-pacific-muted text-sm leading-relaxed">{card.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // 7. Scene 6: Pricing (INTERACTIVE CARDS)
+        const Scene6 = () => {
+            const [step, setStep] = useState(0);
+            const [data, setData] = useState({ type: '', goal: '', scale: '', timeline: '' });
+            const [price, setPrice] = useState({ min: 0, max: 0 });
+            const [showForm, setShowForm] = useState(false);
+            const [formSubmitted, setFormSubmitted] = useState(false);
+
+            const Icons = {
+                LeadGen: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>,
+                Ecommerce: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>,
+                SaaS: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
+                Leads: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>,
+                Sales: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+                Brand: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>,
+                Startup: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>,
+                Growth: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>,
+                Enterprise: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
+                Short: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+                Medium: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+                Long: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
+                Check: <svg className="w-6 h-6 text-pacific-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+            };
+
+            const options = {
+                type: [
+                    { title: 'Lead Gen Site', icon: Icons.LeadGen, weight: {min: 2, max: 4} },
+                    { title: 'E-commerce', icon: Icons.Ecommerce, weight: {min: 4, max: 7} },
+                    { title: 'SaaS/Landing', icon: Icons.SaaS, weight: {min: 3, max: 6} }
+                ],
+                goal: [
+                    { title: 'More Leads', icon: Icons.Leads, weight: {min: 1, max: 3} },
+                    { title: 'Direct Sales', icon: Icons.Sales, weight: {min: 3, max: 5} },
+                    { title: 'Brand Awareness', icon: Icons.Brand, weight: {min: 2, max: 4} }
+                ],
+                scale: [
+                    { title: 'Startup', icon: Icons.Startup, weight: {min: 3, max: 8} },
+                    { title: 'Growth Phase', icon: Icons.Growth, weight: {min: 5, max: 12} },
+                    { title: 'Enterprise', icon: Icons.Enterprise, weight: {min: 10, max: 20} }
+                ],
+                timeline: [
+                    { title: '1-2 Months', icon: Icons.Short, weight: {min: 0, max: 0} },
+                    { title: '3-4 Months', icon: Icons.Medium, weight: {min: 0, max: 0} },
+                    { title: '5+ Months', icon: Icons.Long, weight: {min: 0, max: 0} }
+                ]
+            };
+
+            const handleSelect = (field, value, weight) => {
+                setData(prev => ({ ...prev, [field]: value }));
+                setPrice(prev => ({ min: prev.min + weight.min, max: prev.max + weight.max }));
+                setStep(prev => prev + 1);
+            };
+
+            const calculatePrice = () => `₹${(price.min * 10000).toLocaleString()} - ₹${(price.max * 10000).toLocaleString()}`;
+
+            const InteractiveCard = ({ item, onClick, selectedKey }) => {
+                const isSelected = data[selectedKey] === item.title;
+                return (
+                    <div 
+                        onClick={() => onClick(selectedKey, item.title, item.weight)}
+                        className={`interactive-card relative p-8 border rounded-xl cursor-pointer glass-panel ${isSelected ? 'selected border-pacific-gold' : 'border-white/10 hover:border-white/30'}`}
+                    >
+                        <div className="absolute top-4 right-4 check-icon">
+                            <div className="bg-pacific-gold rounded-full p-1">{Icons.Check}</div>
+                        </div>
+                        <div className="flex flex-col items-center text-center space-y-4">
+                            <div className={`icon-container text-pacific-muted`}>{item.icon}</div>
+                            <div>
+                                <span className="block text-xs uppercase tracking-widest mb-2 text-pacific-gold/70">{selectedKey}</span>
+                                <h3 className={`card-title font-serif text-xl text-pacific-white transition-colors`}>{item.title}</h3>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            if (formSubmitted) {
+                return (
+                    <section className="min-h-screen flex items-center justify-center px-4 relative z-10">
+                        <div className="glass-panel p-12 rounded-2xl max-w-lg text-center border-pacific-gold/30 border-2 shadow-[0_0_50px_rgba(212,175,55,0.2)]">
+                            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-pacific-gold flex items-center justify-center text-black">
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                            </div>
+                            <h3 className="font-serif text-4xl text-pacific-white mb-4">Request Received.</h3>
+                            <p className="text-pacific-muted">A strategist is reviewing your scope parameters.</p>
+                        </div>
+                    </section>
+                );
+            }
+
+            return (
+                <section className="min-h-screen py-24 relative flex flex-col items-center justify-center">
+                    <div className="absolute inset-0 bg-black/80 z-0"></div>
+                    <div className="absolute inset-0 z-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#333 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+                    <div className="z-10 w-full max-w-5xl px-6">
+                        <div className="text-center mb-16 relative">
+                            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] bg-pacific-gold blur-[100px] opacity-20 pointer-events-none"></div>
+                            <h3 className="font-serif text-3xl md:text-5xl text-pacific-white mb-4 relative z-10">Configure System</h3>
+                            <p className="text-pacific-muted text-sm">Interactive estimator. Select modules below.</p>
+                        </div>
+                        {!showForm ? (
+                            <div className="space-y-12 pricing-grid">
+                                <div className={`transition-all duration-500 ${step === 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 hidden'}`}>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {options.type.map((item, i) => <InteractiveCard key={i} item={item} onClick={handleSelect} selectedKey="type" />)}
+                                    </div>
+                                </div>
+                                <div className={`transition-all duration-500 ${step === 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 hidden'}`}>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {options.goal.map((item, i) => <InteractiveCard key={i} item={item} onClick={handleSelect} selectedKey="goal" />)}
+                                    </div>
+                                </div>
+                                <div className={`transition-all duration-500 ${step === 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 hidden'}`}>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {options.scale.map((item, i) => <InteractiveCard key={i} item={item} onClick={handleSelect} selectedKey="scale" />)}
+                                    </div>
+                                </div>
+                                <div className={`transition-all duration-500 ${step === 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 hidden'}`}>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {options.timeline.map((item, i) => <InteractiveCard key={i} item={item} onClick={handleSelect} selectedKey="timeline" />)}
+                                    </div>
+                                </div>
+                                <div className={`transition-all duration-700 ${step === 4 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 hidden'}`}>
+                                    <div className="max-w-2xl mx-auto glass-panel p-1 rounded-2xl overflow-hidden border-pacific-gold/50 border">
+                                        <div className="bg-black/80 p-10 rounded-xl text-center">
+                                            <div className="w-16 h-1 bg-pacific-gold mx-auto mb-6"></div>
+                                            <h4 className="text-pacific-gold uppercase tracking-[0.2em] text-sm mb-2">Estimated Investment</h4>
+                                            <div className="py-6"><div className="text-5xl md:text-6xl font-serif text-white mb-2 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">{calculatePrice()}</div></div>
+                                            <p className="text-pacific-muted text-sm mb-8 border-b border-white/10 pb-8">Algorithmic projection based on selection parameters. Exact pricing requires strategic review.</p>
+                                            <button onClick={() => setShowForm(true)} className="group relative px-10 py-4 bg-transparent border border-pacific-gold text-pacific-gold font-semibold tracking-widest uppercase overflow-hidden transition-all hover:text-black">
+                                                <div className="absolute inset-0 w-full h-full bg-pacific-gold transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out"></div>
+                                                <span className="relative z-10">Initialize Consult</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <form className="max-w-md mx-auto fade-in space-y-6" onSubmit={(e) => { e.preventDefault(); setFormSubmitted(true); }}>
+                                <div className="glass-panel p-8 rounded-2xl border border-white/10">
+                                    <div className="space-y-4">
+                                        <div><label className="block text-xs uppercase tracking-widest text-pacific-gold mb-2">Identity</label><input type="text" required className="w-full bg-black/50 border-b border-white/20 p-3 text-pacific-white focus:border-pacific-gold focus:outline-none transition-colors placeholder-gray-600" placeholder="Your Name" /></div>
+                                        <div><label className="block text-xs uppercase tracking-widest text-pacific-gold mb-2">Transmission</label><input type="email" required className="w-full bg-black/50 border-b border-white/20 p-3 text-pacific-white focus:border-pacific-gold focus:outline-none transition-colors placeholder-gray-600" placeholder="email@domain.com" /></div>
+                                        <div><label className="block text-xs uppercase tracking-widest text-pacific-gold mb-2">Comms Channel</label><input type="tel" className="w-full bg-black/50 border-b border-white/20 p-3 text-pacific-white focus:border-pacific-gold focus:outline-none transition-colors placeholder-gray-600" placeholder="+1 (555) 000-0000" /></div>
+                                    </div>
+                                    <button type="submit" className="w-full mt-8 py-4 bg-pacific-white text-black font-bold tracking-widest uppercase text-sm hover:bg-pacific-gold transition-colors rounded">Secure Request</button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </section>
+            );
+        };
+
+        // 8. Scene 7: Demos (LIVE VIDEO POPUP)
+        const Scene7 = () => {
+            const [activeProject, setActiveProject] = useState(null);
+            
+            const projects = [
+                { id: 1, title: "Project Alpha 1", stats: "Conversion Rate: +240%", src: "https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4" },
+                { id: 2, title: "Project Alpha 2", stats: "Retention Rate: +85%", src: "https://videos.pexels.com/video-files/3130284/3130284-uhd_2560_1440_30fps.mp4" },
+                { id: 3, title: "Project Alpha 3", stats: "Traffic: +300%", src: "https://videos.pexels.com/video-files/853789/853789-hd_1920_1080_25fps.mp4" }
+            ];
+
+            const VideoModal = ({ project, onClose }) => {
+                const modalRef = useRef(null);
+                useEffect(() => {
+                    gsap.fromTo(modalRef.current, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.2)" });
+                    document.body.style.overflow = 'hidden';
+                    return () => { document.body.style.overflow = ''; };
+                }, []);
+
+                return (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 md:p-8" onClick={onClose}>
+                        <div ref={modalRef} className="w-full max-w-6xl relative" onClick={e => e.stopPropagation()}>
+                            <button onClick={onClose} className="absolute -top-12 right-0 text-pacific-gold hover:text-white transition-colors flex items-center gap-2 uppercase tracking-widest text-xs font-bold group">
+                                <span>Close Preview</span>
+                                <svg className="w-4 h-4 transform group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                            <div className="aspect-video bg-black rounded-lg overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.15)] border border-white/10">
+                                <video src={project.src} autoPlay loop muted playsInline controls className="w-full h-full object-contain" />
+                            </div>
+                            <div className="mt-4 flex justify-between items-end border-b border-pacific-gold/20 pb-4">
+                                <div>
+                                    <h3 className="text-2xl font-serif text-white">{project.title}</h3>
+                                    <p className="text-pacific-gold text-sm">{project.stats}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-pacific-muted text-xs uppercase tracking-widest">System Status</p>
+                                    <p className="text-green-400 text-xs font-mono animate-pulse">● LIVE</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <section className="py-32 relative">
+                    <div className="absolute inset-0 bg-black/50 z-0"></div>
+                    <div className="container mx-auto px-6 relative z-10">
+                        <div className="flex justify-between items-end mb-16">
+                            <h3 className="font-serif text-4xl text-pacific-white">Live Systems</h3>
+                            <p className="hidden md:block text-pacific-muted text-sm">Click to expand.</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {projects.map((item) => (
+                                <div key={item.id} className="group demo-card relative aspect-[4/5] bg-pacific-gray/80 overflow-hidden cursor-pointer glass-panel rounded-lg" onClick={() => setActiveProject(item)}>
+                                    <div className="demo-video-wrapper">
+                                        <video src={item.src} autoPlay muted loop playsInline className="demo-video" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 z-10 pointer-events-none"></div>
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 p-8 z-20 w-full">
+                                        <div className="flex justify-between items-end">
+                                            <div>
+                                                <h4 className="text-2xl font-serif text-white mb-2">{item.title}</h4>
+                                                <p className="text-pacific-gold text-sm">{item.stats}</p>
+                                            </div>
+                                            <div className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center group-hover:bg-pacific-gold group-hover:border-pacific-gold group-hover:text-black transition-all">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    {activeProject && <VideoModal project={activeProject} onClose={() => setActiveProject(null)} />}
+                </section>
+            );
+        };
+
+        // 9. Scene 8: Protocol (WITH IMAGES)
+        const Scene8 = () => {
+            const steps = [
+                { title: "Understand", desc: "We listen before we speak.", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=600" },
+                { title: "Design", desc: "UX first, pixels second.", img: "https://images.unsplash.com/photo-1586717791821-3f44a5638d48?auto=format&fit=crop&q=80&w=600" },
+                { title: "Build", desc: "Clean code. Fast load.", img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=600" },
+                { title: "Launch", desc: "High-impact release.", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=600" },
+                { title: "Optimize", desc: "Data-driven iteration.", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600" }
+            ];
+            return (
+                <section className="py-24 relative">
+                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-transparent z-0"></div>
+                    <div className="container mx-auto px-6 relative z-10">
+                        <h3 className="font-serif text-3xl text-center text-pacific-white mb-20">The Pacific Protocol</h3>
+                        <div className="relative">
+                            <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/10 transform -translate-x-1/2 hidden md:block"></div>
+                            <div className="space-y-24">
+                                {steps.map((step, i) => (
+                                    <div key={i} className={`flex flex-col md:flex-row items-center justify-between ${i % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                                        <div className="w-full md:w-5/12 text-center md:text-right px-4">
+                                            <h4 className="text-2xl font-serif text-pacific-gold mb-2">{step.title}</h4>
+                                            <p className="text-pacific-white/80">{step.desc}</p>
+                                        </div>
+                                        <div className="w-8 h-8 rounded-full bg-black border border-pacific-gold z-10 my-4 md:my-0 flex items-center justify-center">
+                                            <div className="w-2 h-2 bg-pacific-gold rounded-full"></div>
+                                        </div>
+                                        <div className="w-full md:w-5/12 px-4 h-24">
+                                            <div className="w-full h-full border border-white/10 bg-black/30 glass-panel rounded overflow-hidden relative group">
+                                                <img src={step.img} alt={step.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 transform group-hover:scale-105 transition-transform duration-700" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // 10. Scene 9: Quote
+        const Scene9 = () => {
+            return (
+                <section className="min-h-[70vh] flex items-center justify-center relative">
+                    <div className="absolute inset-0 bg-black/60 z-0"></div>
+                    <div className="container mx-auto px-6 relative z-10 max-w-3xl text-center">
+                        <div className="w-16 h-16 mx-auto mb-8 glass-panel rounded-full flex items-center justify-center text-2xl text-pacific-gold">P</div>
+                        <blockquote className="font-serif text-3xl md:text-4xl leading-relaxed text-pacific-white mb-8">
+                            "Pacific was built on one belief — businesses deserve websites that actually work. Not just look pretty."
+                        </blockquote>
+                        <cite className="text-pacific-gold not-italic uppercase tracking-widest text-sm">— Founder, Pacific</cite>
+                    </div>
+                </section>
+            );
+        };
+
+        // 11. Scene 10: Footer (WITH SOCIAL ICONS)
+        const Scene10 = () => {
+             return (
+                <section className="min-h-screen flex flex-col items-center justify-center relative">
+                    <div className="absolute inset-0 bg-black z-0"></div>
+                    <div className="text-center px-4 z-10">
+                        <p className="text-pacific-gold uppercase tracking-[0.3em] mb-6 text-sm animate-pulse">The End.</p>
+                        <h2 className="font-serif text-5xl md:text-7xl text-pacific-white mb-12">If this felt right,<br/>let’s talk.</h2>
+                        
+                        <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-16">
+                            <a href="#pricing" className="px-10 py-4 border border-white/20 text-white hover:border-pacific-gold hover:text-pacific-gold transition-all duration-300 tracking-widest uppercase text-xs">
+                                Calculate Price
+                            </a>
+                            <a href="#" className="px-10 py-4 bg-pacific-gold text-black font-semibold hover:bg-white transition-colors tracking-widest uppercase text-xs">
+                                WhatsApp Us
+                            </a>
+                        </div>
+
+                        {/* Social Media Icons */}
+                        <div className="flex justify-center gap-8">
+                            <a href="#" className="social-icon group flex flex-col items-center gap-2">
+                                <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-pacific-gold group-hover:border-pacific-gold transition-all duration-300">
+                                    <svg className="w-5 h-5 text-white group-hover:text-black transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                    </svg>
+                                </div>
+                                <span className="text-[10px] uppercase text-pacific-muted group-hover:text-white transition-colors">Instagram</span>
+                            </a>
+                            
+                            <a href="#" className="social-icon group flex flex-col items-center gap-2">
+                                <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-pacific-gold group-hover:border-pacific-gold transition-all duration-300">
+                                    <svg className="w-5 h-5 text-white group-hover:text-black transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476 0 0 7.09 0 9.235z"/>
+                                    </svg>
+                                </div>
+                                <span className="text-[10px] uppercase text-pacific-muted group-hover:text-white transition-colors">LinkedIn</span>
+                            </a>
+
+                            <a href="#" className="social-icon group flex flex-col items-center gap-2">
+                                <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-pacific-gold group-hover:border-pacific-gold transition-all duration-300">
+                                    <svg className="w-5 h-5 text-white group-hover:text-black transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953c0 0-.866-.057-1.659-.057-1.445 0-1.868.946-1.868 2.05v2.408h3.278l-.532 3.47h-2.746v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                    </svg>
+                                </div>
+                                <span className="text-[10px] uppercase text-pacific-muted group-hover:text-white transition-colors">Facebook</span>
+                            </a>
+
+                            <a href="#" className="social-icon group flex flex-col items-center gap-2">
+                                <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-pacific-gold group-hover:border-pacific-gold transition-all duration-300">
+                                    <svg className="w-5 h-5 text-white group-hover:text-black transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                                    </svg>
+                                </div>
+                                <span className="text-[10px] uppercase text-pacific-muted group-hover:text-white transition-colors">Email</span>
+                            </a>
+                        </div>
+                    </div>
+                    <footer className="absolute bottom-8 w-full text-center text-pacific-muted/30 text-xs z-10">
+                        © 2023 Pacific Digital Systems. All Rights Reserved.
+                    </footer>
+                </section>
+            );
+        };
+
+        // --- MAIN APP ---
+        const App = () => {
+            const cursorRef = useCustomCursor();
+            const videoRef = useRef(null);
+
+            useEffect(() => {
+                const lenis = new Lenis({
+                    duration: 1.2,
+                    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                    direction: 'vertical',
+                    gestureDirection: 'vertical',
+                    smooth: true,
+                    mouseMultiplier: 1,
+                    smoothTouch: false,
+                    touchMultiplier: 2,
+                });
+                function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+                requestAnimationFrame(raf);
+                gsap.registerPlugin(ScrollTrigger);
+                lenis.on('scroll', ScrollTrigger.update);
+                gsap.ticker.add((time) => { lenis.raf(time * 1000); });
+                gsap.ticker.lagSmoothing(0);
+                return () => { lenis.destroy(); };
+            }, []);
+
+            return (
+                <div className="w-full text-pacific-white font-sans selection:bg-pacific-gold selection:text-black">
+                    <video ref={videoRef} id="bg-video" playsInline muted preload="auto" style={{display: 'none'}}>
+                        <source src="" type="video/mp4" />
+                    </video>
+
+                    {/*<Navbar / >*/}
+                    <div ref={cursorRef} />
+                    <Scene1 />
+                    <Scene2 />
+                    <Scene3 />
+                    <Scene4 />
+                    <Scene5 />
+                    <Scene6 />
+                    <Scene7 />
+                    <Scene8 />
+                    <Scene9 />
+                    <Scene10 />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
